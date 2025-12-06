@@ -1,50 +1,51 @@
 import { useState } from "react";
-import reactLogo from "./assets/react.svg";
-import { invoke } from "@tauri-apps/api/core";
-import "./App.css";
 
 function App() {
-  const [greetMsg, setGreetMsg] = useState("");
-  const [name, setName] = useState("");
+  const [repoUrl, setRepoUrl] = useState("");
 
-  async function greet() {
-    // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
-    setGreetMsg(await invoke("greet", { name }));
-  }
+  const handleAnalyze = () => {
+    console.log("Analizando repositorio:", repoUrl);
+    // Aquí luego llamaremos a la API de GitHub
+  };
 
   return (
-    <main className="container">
-      <h1>Welcome to Tauri + React</h1>
+    <div style={{ padding: "2rem", fontFamily: "sans-serif" }}>
+      <h1>AutoDoc Desktop</h1>
 
-      <div className="row">
-        <a href="https://vite.dev" target="_blank">
-          <img src="/vite.svg" className="logo vite" alt="Vite logo" />
-        </a>
-        <a href="https://tauri.app" target="_blank">
-          <img src="/tauri.svg" className="logo tauri" alt="Tauri logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <p>Click on the Tauri, Vite, and React logos to learn more.</p>
+      <label style={{ display: "block", marginTop: "1rem" }}>
+        URL del repositorio de GitHub:
+      </label>
 
-      <form
-        className="row"
-        onSubmit={(e) => {
-          e.preventDefault();
-          greet();
+      <input
+        type="text"
+        placeholder="https://github.com/usuario/repositorio"
+        value={repoUrl}
+        onChange={(e) => setRepoUrl(e.target.value)}
+        style={{
+          width: "100%",
+          padding: "0.5rem",
+          marginTop: "0.5rem",
+          borderRadius: "6px",
+          border: "1px solid #ccc",
+        }}
+      />
+
+      <button
+        onClick={handleAnalyze}
+        style={{
+          marginTop: "1rem",
+          padding: "0.7rem 1.4rem",
+          backgroundColor: "#4f46e5",
+          color: "white",
+          border: "none",
+          borderRadius: "6px",
+          cursor: "pointer",
+          fontSize: "1rem",
         }}
       >
-        <input
-          id="greet-input"
-          onChange={(e) => setName(e.currentTarget.value)}
-          placeholder="Enter a name..."
-        />
-        <button type="submit">Greet</button>
-      </form>
-      <p>{greetMsg}</p>
-    </main>
+        Analizar Repositorio
+      </button>
+    </div>
   );
 }
 
