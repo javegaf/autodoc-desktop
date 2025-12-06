@@ -1,16 +1,71 @@
 import { useState } from "react";
+import { parseGithubUrl } from "./services/githubParser";
+import { fetchRepoInfo } from "./services/githubApi";
+import { RepoInfo } from "./components/RepoInfo";
+import { fetchRepoTree } from "./services/githubTree";
+import { RepoTree } from "./components/RepoTree";
+import { KeyFiles } from "./components/KeyFiles";
+import { detectKeyFiles } from "./services/fileDetector";
 
 function App() {
   const [repoUrl, setRepoUrl] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [repoInfo, setRepoInfo] = useState<any>(null);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [repoTree, setRepoTree] = useState<any[]>([]);
+  const [keyFiles, setKeyFiles] = useState<any | null>(null);
 
-  const handleAnalyze = () => {
-    console.log("Analizando repositorio:", repoUrl);
-    // Aquí luego llamaremos a la API de GitHub
+  const handleAnalyze = async () => {
+    setLoading(true);
+    setErrorMessage("");
+    setRepoInfo(null);
+    setRepoTree([]);
+    setKeyFiles(null);
+
+    // Validar URL
+    const parsed = parseGithubUrl(repoUrl);
+    if (!parsed) {
+      setErrorMessage("URL inválida. Debe ser un enlace válido de GitHub.");
+      setLoading(false);
+      return;
+    }
+
+    // 1. Obtener información básica
+    const info = await fetchRepoInfo(repoUrl);
+    if (info.error) {
+      setErrorMessage(info.error);
+      setLoading(false);
+      return;
+    }
+    setRepoInfo(info);
+
+    // 2. Obtener estructura del repositorio (árbol)
+    const tree = await fetchRepoTree(repoUrl);
+    if (tree.error) {
+      console.log("Error obteniendo el árbol:", tree.error);
+    } else {
+      console.log("Árbol del repositorio:", tree);
+      setRepoTree(tree.files);
+
+      // Detectar archivos clave
+      const detected = detectKeyFiles(tree.files);
+      setKeyFiles(detected);
+      console.log("Archivos clave detectados:", detected);
+    }
+
+    setLoading(false);
   };
 
   return (
-    <div style={{ padding: "2rem", fontFamily: "sans-serif" }}>
-      <h1>AutoDoc Desktop</h1>
+    <div
+      style={{
+        padding: "2rem",
+        fontFamily: "sans-serif",
+        maxWidth: "700px",
+        margin: "0 auto",
+      }}
+    >
+      <h1 style={{ marginBottom: "1rem" }}>AutoDoc Desktop</h1>
 
       <label style={{ display: "block", marginTop: "1rem" }}>
         URL del repositorio de GitHub:
@@ -32,19 +87,34 @@ function App() {
 
       <button
         onClick={handleAnalyze}
+        disabled={loading}
         style={{
           marginTop: "1rem",
           padding: "0.7rem 1.4rem",
-          backgroundColor: "#4f46e5",
+          backgroundColor: loading ? "#818cf8" : "#4f46e5",
           color: "white",
           border: "none",
           borderRadius: "6px",
-          cursor: "pointer",
+          cursor: loading ? "not-allowed" : "pointer",
           fontSize: "1rem",
         }}
       >
-        Analizar Repositorio
+        {loading ? "Analizando..." : "Analizar Repositorio"}
       </button>
+
+      {/* Mensaje de error */}
+      {errorMessage && (
+        <p style={{ color: "red", marginTop: "1rem" }}>⚠️ {errorMessage}</p>
+      )}
+
+      {/* Información del repositorio */}
+      {repoInfo && <RepoInfo info={repoInfo} />}
+
+      {/* Árbol del repositorio */}
+      {repoTree.length > 0 && <RepoTree tree={repoTree} />}
+
+      {/* Archivos clave detectados */}
+      {keyFiles && <KeyFiles detected={keyFiles} />}
     </div>
   );
 }
