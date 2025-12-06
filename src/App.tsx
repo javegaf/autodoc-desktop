@@ -6,6 +6,7 @@ import { fetchRepoTree } from "./services/githubTree";
 import { RepoTree } from "./components/RepoTree";
 import { KeyFiles } from "./components/KeyFiles";
 import { detectKeyFiles } from "./services/fileDetector";
+import { generateReadme } from "./services/readmeGenerator";
 
 function App() {
   const [repoUrl, setRepoUrl] = useState("");
@@ -14,6 +15,7 @@ function App() {
   const [errorMessage, setErrorMessage] = useState("");
   const [repoTree, setRepoTree] = useState<any[]>([]);
   const [keyFiles, setKeyFiles] = useState<any | null>(null);
+  const [generatedReadme, setGeneratedReadme] = useState<string | null>(null);
 
   const handleAnalyze = async () => {
     setLoading(true);
@@ -51,6 +53,11 @@ function App() {
       const detected = detectKeyFiles(tree.files);
       setKeyFiles(detected);
       console.log("Archivos clave detectados:", detected);
+      // Generar README si se detectaron archivos clave
+      const markdown = generateReadme(info, detected, tree.files);
+      setGeneratedReadme(markdown);
+      console.log("README generado:", markdown);
+
     }
 
     setLoading(false);
@@ -115,6 +122,25 @@ function App() {
 
       {/* Archivos clave detectados */}
       {keyFiles && <KeyFiles detected={keyFiles} />}
+
+      {/* README generado */}
+      {generatedReadme && (
+        <div
+          style={{
+            marginTop: "2rem",
+            background: "#111827",
+            color: "#e5e7eb",
+            padding: "1.5rem",
+            borderRadius: "12px",
+            whiteSpace: "pre-wrap",
+            fontFamily: "monospace",
+            fontSize: "0.9rem",
+          }}
+        >
+          <h2>README Generado</h2>
+          <pre>{generatedReadme}</pre>
+        </div>
+)}
     </div>
   );
 }
